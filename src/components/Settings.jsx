@@ -3,17 +3,49 @@ import { ChevronLeft, ChevronRight, Trash2, Download, Plus, GripVertical, Edit3,
 import { HABIT_COLORS, HABIT_ICONS, TIME_SLOTS } from '../hooks/useHabits'
 
 export default function Settings({ habits, settings, colorMap, iconMap, onBack, updateSettings, addHabit, updateHabit, deleteHabit }) {
-  const [editingId, setEditingId] = useState(null)
-  const [editName, setEditName] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState('add') // 'add' | 'edit'
+  const [modalHabitId, setModalHabitId] = useState(null)
+  
+  const [formName, setFormName] = useState('')
+  const [formIconId, setFormIconId] = useState(HABIT_ICONS[0].id)
+  const [formColorId, setFormColorId] = useState(HABIT_COLORS[0].id)
+  const [formTimeSlot, setFormTimeSlot] = useState('Any time')
 
-  const startEdit = (h) => {
-    setEditingId(h.id)
-    setEditName(h.name)
+  const openAddModal = () => {
+    setModalMode('add')
+    setModalHabitId(null)
+    setFormName('')
+    setFormIconId(HABIT_ICONS[0].id)
+    setFormColorId(HABIT_COLORS[0].id)
+    setFormTimeSlot('Any time')
+    setModalOpen(true)
   }
 
-  const commitEdit = (id) => {
-    if (editName.trim()) updateHabit(id, { name: editName.trim() })
-    setEditingId(null)
+  const openEditModal = (h) => {
+    setModalMode('edit')
+    setModalHabitId(h.id)
+    setFormName(h.name)
+    setFormIconId(h.icon || HABIT_ICONS[0].id)
+    setFormColorId(h.colorId || HABIT_COLORS[0].id)
+    setFormTimeSlot(h.timeSlot || 'Any time')
+    setModalOpen(true)
+  }
+
+  const handleSave = () => {
+    if (!formName.trim()) return
+    const habitData = {
+      name: formName.trim(),
+      icon: formIconId,
+      colorId: formColorId,
+      timeSlot: formTimeSlot,
+    }
+    if (modalMode === 'add') {
+      addHabit(habitData)
+    } else {
+      updateHabit(modalHabitId, habitData)
+    }
+    setModalOpen(false)
   }
 
   const exportCSV = () => {
@@ -57,37 +89,18 @@ export default function Settings({ habits, settings, colorMap, iconMap, onBack, 
               <div style={{ ...styles.habitDot, background: color?.bg }}>
                 <span style={{ fontSize: 15 }}>{iconDef.emoji}</span>
               </div>
-              {editingId === h.id ? (
-                <input
-                  style={styles.inlineInput}
-                  value={editName}
-                  autoFocus
-                  onChange={e => setEditName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') commitEdit(h.id); if (e.key === 'Escape') setEditingId(null) }}
-                />
-              ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
                 <span style={styles.rowLabel}>{h.name}</span>
-              )}
+                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{h.timeSlot}</span>
+              </div>
               <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-                {editingId === h.id ? (
-                  <>
-                    <IconBtn icon={<Check size={14} />} onClick={() => commitEdit(h.id)} label="Save" />
-                    <IconBtn icon={<X size={14} />}     onClick={() => setEditingId(null)} label="Cancel" />
-                  </>
-                ) : (
-                  <>
-                    <IconBtn icon={<Edit3 size={14} />}  onClick={() => startEdit(h)} label="Edit" />
-                    <IconBtn icon={<Trash2 size={14} />} onClick={() => deleteHabit(h.id)} label="Delete" danger />
-                  </>
-                )}
+                <IconBtn icon={<Edit3 size={14} />}  onClick={() => openEditModal(h)} label="Edit" />
+                <IconBtn icon={<Trash2 size={14} />} onClick={() => deleteHabit(h.id)} label="Delete" danger />
               </div>
             </div>
           )
         })}
-        <button style={styles.addRow} onClick={() => {
-          const name = window.prompt('New habit name:')
-          if (name?.trim()) addHabit({ name: name.trim() })
-        }}>
+        <button style={styles.addRow} onClick={openAddModal}>
           <Plus size={15} color="var(--accent)" />
           <span style={{ fontSize: 13, color: 'var(--accent)' }}>Add habit</span>
         </button>
@@ -140,6 +153,131 @@ export default function Settings({ habits, settings, colorMap, iconMap, onBack, 
           <span style={{ ...styles.rowLabel, color: '#D85A30' }}>Clear all history</span>
         </button>
       </div>
+
+      {/* Habit Configuration Modal */}
+      {modalOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setModalOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(4px)',
+              zIndex: 100,
+              animation: 'fadeIn 0.2s ease',
+            }}
+          />
+          
+          {/* Modal Container */}
+          <div
+            style={modalStyles.modalCard}
+            className="animate-slideUp"
+          >
+            <div style={modalStyles.modalHeader}>
+              <h3 style={modalStyles.modalTitle}>
+                {modalMode === 'add' ? 'Add new habit' : 'Edit habit'}
+              </h3>
+              <button
+                onClick={() => setModalOpen(false)}
+                style={modalStyles.closeBtn}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={modalStyles.modalBody}>
+              <label style={modalStyles.label}>Name</label>
+              <input
+                style={modalStyles.input}
+                placeholder="e.g. Meditate, Drink water"
+                value={formName}
+                onChange={e => setFormName(e.target.value)}
+                autoFocus
+              />
+
+              <label style={modalStyles.label}>Icon</label>
+              <div style={modalStyles.iconGrid}>
+                {HABIT_ICONS.map(ic => {
+                  const isSelected = formIconId === ic.id
+                  const colorObj = HABIT_COLORS.find(c => c.id === formColorId)
+                  return (
+                    <button
+                      key={ic.id}
+                      type="button"
+                      onClick={() => setFormIconId(ic.id)}
+                      style={{
+                        ...modalStyles.iconBtn,
+                        background: isSelected ? colorObj.bg : 'var(--surface-2)',
+                        outline: isSelected ? `2px solid ${colorObj.fill}` : '2px solid transparent',
+                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      }}
+                      title={ic.label}
+                    >
+                      <span style={{ fontSize: 20 }}>{ic.emoji}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <label style={modalStyles.label}>Color</label>
+              <div style={modalStyles.colorRow}>
+                {HABIT_COLORS.map(c => {
+                  const isSelected = formColorId === c.id
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setFormColorId(c.id)}
+                      style={{
+                        ...modalStyles.colorSwatch,
+                        background: c.fill,
+                        outline: isSelected ? `3px solid ${c.fill}` : '3px solid transparent',
+                        outlineOffset: 3,
+                        transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                      }}
+                      title={c.label}
+                    />
+                  )
+                })}
+              </div>
+
+              <label style={modalStyles.label}>Best time</label>
+              <select
+                style={modalStyles.select}
+                value={formTimeSlot}
+                onChange={e => setFormTimeSlot(e.target.value)}
+              >
+                {TIME_SLOTS.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={modalStyles.modalFooter}>
+              <button
+                style={modalStyles.cancelBtn}
+                onClick={() => setModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                style={{
+                  ...modalStyles.saveBtn,
+                  opacity: formName.trim() ? 1 : 0.5,
+                  cursor: formName.trim() ? 'pointer' : 'not-allowed',
+                }}
+                disabled={!formName.trim()}
+                onClick={handleSave}
+              >
+                {modalMode === 'add' ? 'Add habit' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -163,7 +301,7 @@ function IconBtn({ icon, onClick, label, danger }) {
         width: 28, height: 28, borderRadius: 7,
         background: 'var(--surface-2)',
         border: '0.5px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer',
         color: danger ? '#D85A30' : 'var(--text-2)',
       }}
@@ -236,11 +374,6 @@ const styles = {
     border: '0.5px dashed var(--accent)',
     borderRadius: 8, cursor: 'pointer', marginTop: 4,
   },
-  inlineInput: {
-    flex: 1, padding: '4px 8px',
-    background: 'var(--surface)', border: '0.5px solid var(--accent)',
-    borderRadius: 6, fontSize: 14, color: 'var(--text)', outline: 'none',
-  },
   timeInput: {
     padding: '4px 8px', background: 'var(--surface)',
     border: '0.5px solid var(--border)', borderRadius: 6,
@@ -252,5 +385,146 @@ const styles = {
     border: '0.5px solid var(--border)', borderRadius: 6,
     fontSize: 13, color: 'var(--text)', outline: 'none',
     marginLeft: 'auto', cursor: 'pointer',
+  },
+}
+
+const modalStyles = {
+  modalCard: {
+    position: 'fixed',
+    left: '50%',
+    bottom: 0,
+    transform: 'translateX(-50%)',
+    width: '100%',
+    maxWidth: 480,
+    background: 'var(--surface)',
+    borderRadius: '20px 20px 0 0',
+    border: '0.5px solid var(--border)',
+    borderBottom: 'none',
+    zIndex: 110,
+    padding: '24px 20px',
+    boxShadow: '0 -8px 32px rgba(0,0,0,0.12)',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: '85dvh',
+  },
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 20,
+    fontWeight: 400,
+    color: 'var(--text)',
+  },
+  closeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    background: 'var(--surface-2)',
+    border: '0.5px solid var(--border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: 'var(--text-2)',
+  },
+  modalBody: {
+    overflowY: 'auto',
+    flex: 1,
+    paddingRight: 4,
+  },
+  label: {
+    fontSize: 12,
+    color: 'var(--text-3)',
+    marginBottom: 6,
+    letterSpacing: '0.03em',
+    display: 'block',
+    marginTop: 14,
+  },
+  input: {
+    width: '100%',
+    padding: '10px 14px',
+    background: 'var(--surface-2)',
+    border: '0.5px solid var(--border)',
+    borderRadius: 10,
+    fontSize: 14,
+    color: 'var(--text)',
+    outline: 'none',
+    transition: 'border-color 0.15s',
+  },
+  iconGrid: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 6,
+  },
+  iconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  },
+  colorRow: {
+    display: 'flex',
+    gap: 12,
+    padding: '4px 0',
+  },
+  colorSwatch: {
+    width: 26,
+    height: 26,
+    borderRadius: '50%',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  },
+  select: {
+    width: '100%',
+    padding: '10px 14px',
+    background: 'var(--surface-2)',
+    border: '0.5px solid var(--border)',
+    borderRadius: 10,
+    fontSize: 14,
+    color: 'var(--text)',
+    outline: 'none',
+    cursor: 'pointer',
+    marginBottom: 16,
+  },
+  modalFooter: {
+    display: 'flex',
+    gap: 10,
+    marginTop: 20,
+  },
+  cancelBtn: {
+    flex: 1,
+    padding: '12px',
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 500,
+    background: 'var(--surface-2)',
+    color: 'var(--text-2)',
+    border: '0.5px solid var(--border)',
+    textAlign: 'center',
+    cursor: 'pointer',
+  },
+  saveBtn: {
+    flex: 2,
+    padding: '12px',
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 500,
+    background: 'var(--accent)',
+    color: '#fff',
+    border: 'none',
+    textAlign: 'center',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
   },
 }

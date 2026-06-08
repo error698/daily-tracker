@@ -153,7 +153,12 @@ export default function DailySheet({
 
 const styles = {
   sheet: {
-    position: 'fixed', left: 0, right: 0, bottom: 0,
+    position: 'fixed',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '100%',
+    maxWidth: 480,
+    bottom: 0,
     background: 'var(--surface)',
     borderRadius: '20px 20px 0 0',
     border: '0.5px solid var(--border)',

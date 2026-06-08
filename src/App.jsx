@@ -53,109 +53,117 @@ export default function App() {
 
   if (screen === 'settings') {
     return (
-      <div style={styles.app}>
-        <SettingsScreen
-          habits={habits}
-          settings={settings}
-          colorMap={colorMap}
-          iconMap={iconMap}
-          onBack={() => setScreen('dashboard')}
-          updateSettings={updateSettings}
-          addHabit={addHabit}
-          updateHabit={updateHabit}
-          deleteHabit={deleteHabit}
-        />
+      <div className="app-container">
+        <div className="settings-container">
+          <SettingsScreen
+            habits={habits}
+            settings={settings}
+            colorMap={colorMap}
+            iconMap={iconMap}
+            onBack={() => setScreen('dashboard')}
+            updateSettings={updateSettings}
+            addHabit={addHabit}
+            updateHabit={updateHabit}
+            deleteHabit={deleteHabit}
+          />
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={styles.app}>
-      {/* Top bar */}
-      <header style={styles.topBar}>
-        <div style={styles.monthNav}>
-          <button onClick={prevMonth} style={styles.navBtn} aria-label="Previous month">
-            <ChevronLeft size={16} />
+    <div className="app-container">
+      {/* Sidebar Panel */}
+      <div className="sidebar-panel">
+        {/* Top bar */}
+        <header style={styles.topBar}>
+          <div style={styles.monthNav}>
+            <button onClick={prevMonth} style={styles.navBtn} aria-label="Previous month">
+              <ChevronLeft size={16} />
+            </button>
+            <h1 style={styles.monthTitle}>
+              {MONTH_NAMES[viewMonth]} <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>{viewYear}</span>
+            </h1>
+            <button onClick={nextMonth} style={styles.navBtn} aria-label="Next month">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          <button
+            onClick={() => setScreen('settings')}
+            style={styles.settingsBtn}
+            aria-label="Settings"
+          >
+            <SettingsIcon size={17} />
           </button>
-          <h1 style={styles.monthTitle}>
-            {MONTH_NAMES[viewMonth]} <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>{viewYear}</span>
-          </h1>
-          <button onClick={nextMonth} style={styles.navBtn} aria-label="Next month">
-            <ChevronRight size={16} />
-          </button>
-        </div>
-        <button
-          onClick={() => setScreen('settings')}
-          style={styles.settingsBtn}
-          aria-label="Settings"
-        >
-          <SettingsIcon size={17} />
-        </button>
-      </header>
+        </header>
 
-      {/* Reminder banner */}
-      <ReminderBanner
-        habits={habits}
-        log={log}
-        settings={settings}
-        onCheckIn={() => setSelectedDate(new Date())}
-      />
-
-      {/* Calendar */}
-      <div style={styles.calendarWrap}>
-        <CalendarGridWithLog
-          year={viewYear}
-          month={viewMonth}
+        {/* Reminder banner */}
+        <ReminderBanner
           habits={habits}
           log={log}
-          colorMap={colorMap}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          getDayCompletion={getDayCompletion}
+          settings={settings}
+          onCheckIn={() => setSelectedDate(new Date())}
         />
+
+        {/* Stats strip */}
+        <div style={styles.statsStrip}>
+          <Stat label="Streak" value={`${streak}d`} accent />
+          <div style={styles.statDivider} />
+          <Stat label="Best" value={`${bestStreak}d`} />
+          <div style={styles.statDivider} />
+          <Stat label="Month" value={`${monthStats.avgPct}%`} />
+          <div style={styles.statDivider} />
+          <Stat label="Perfect days" value={monthStats.perfectDays} />
+        </div>
+
+        {/* Habit legend */}
+        {habits.length > 0 && (
+          <div style={styles.legend}>
+            {habits.map(h => {
+              const c = colorMap[h.colorId]
+              const iconDef = Object.values(iconMap).find(ic => ic.id === h.icon) || { emoji: '●' }
+              return (
+                <div key={h.id} style={styles.legendItem}>
+                  <span style={{ ...styles.legendDot, background: c?.fill }} />
+                  <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{iconDef.emoji} {h.name}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Habit legend */}
-      {habits.length > 0 && (
-        <div style={styles.legend}>
-          {habits.map(h => {
-            const c = colorMap[h.colorId]
-            const iconDef = Object.values(iconMap).find(ic => ic.id === h.icon) || { emoji: '●' }
-            return (
-              <div key={h.id} style={styles.legendItem}>
-                <span style={{ ...styles.legendDot, background: c?.fill }} />
-                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{iconDef.emoji} {h.name}</span>
-              </div>
-            )
-          })}
+      {/* Main Calendar Panel */}
+      <div className="main-panel">
+        {/* Calendar */}
+        <div style={styles.calendarWrap}>
+          <CalendarGridWithLog
+            year={viewYear}
+            month={viewMonth}
+            habits={habits}
+            log={log}
+            colorMap={colorMap}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            getDayCompletion={getDayCompletion}
+          />
         </div>
-      )}
 
-      {/* Stats strip */}
-      <div style={styles.statsStrip}>
-        <Stat label="Streak" value={`${streak}d`} accent />
-        <div style={styles.statDivider} />
-        <Stat label="Best" value={`${bestStreak}d`} />
-        <div style={styles.statDivider} />
-        <Stat label="Month" value={`${monthStats.avgPct}%`} />
-        <div style={styles.statDivider} />
-        <Stat label="Perfect days" value={monthStats.perfectDays} />
+        {/* Empty state */}
+        {habits.length === 0 && (
+          <div style={styles.emptyState}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--text-2)', marginBottom: 8 }}>
+              No habits yet
+            </p>
+            <p style={{ fontSize: 14, color: 'var(--text-3)', marginBottom: 20 }}>
+              Add your first habit in Settings to start tracking.
+            </p>
+            <button style={styles.addHabitBtn} onClick={() => setScreen('settings')}>
+              Go to Settings
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Empty state */}
-      {habits.length === 0 && (
-        <div style={styles.emptyState}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--text-2)', marginBottom: 8 }}>
-            No habits yet
-          </p>
-          <p style={{ fontSize: 14, color: 'var(--text-3)', marginBottom: 20 }}>
-            Add your first habit in Settings to start tracking.
-          </p>
-          <button style={styles.addHabitBtn} onClick={() => setScreen('settings')}>
-            Go to Settings
-          </button>
-        </div>
-      )}
 
       {/* Daily sheet */}
       {selectedDate && (
