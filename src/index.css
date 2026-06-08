@@ -57,25 +57,25 @@
 
   --font-display: 'DM Serif Display', Georgia, serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
+  --graph-track: rgba(0,0,0,0.05);
 
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:        #16151A;
-    --surface:   #1F1E26;
-    --surface-2: #2A2933;
-    --text:      #F0EFF8;
-    --text-2:    #9E9CB0;
-    --text-3:    #6B6880;
-    --border:    rgba(255,255,255,0.08);
-    --border-2:  rgba(255,255,255,0.14);
-    --accent:    #7F77DD;
-    --accent-bg: #26215C;
-    --accent-text: #CECBF6;
-    color-scheme: dark;
-  }
+.dark {
+  --bg:        #000000;
+  --surface:   #121214; /* Elevate card surface slightly above pure black for contrast */
+  --surface-2: #222226; /* Lighter secondary surface */
+  --text:      #FFFFFF;
+  --text-2:    #D4D4D8; /* Brighter high contrast secondary text */
+  --text-3:    #A1A1AA; /* Brighter meta text */
+  --border:    rgba(255,255,255,0.22); /* Lighten borders for clean cell definition */
+  --border-2:  rgba(255,255,255,0.32);
+  --accent:    #9890F0; /* Brighter accent lavender/purple */
+  --accent-bg: #1C1A38;
+  --accent-text: #E0DEFC;
+  --graph-track: rgba(255,255,255,0.08);
+  color-scheme: dark;
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }

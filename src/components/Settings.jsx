@@ -156,24 +156,11 @@ export default function Settings({ habits, settings, colorMap, iconMap, onBack, 
 
       {/* Habit Configuration Modal */}
       {modalOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            onClick={() => setModalOpen(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(4px)',
-              zIndex: 100,
-              animation: 'fadeIn 0.2s ease',
-            }}
-          />
-          
+        <div style={modalStyles.modalOverlay}>
           {/* Modal Container */}
           <div
             style={modalStyles.modalCard}
-            className="animate-slideUp"
+            className="animate-scaleIn"
           >
             <div style={modalStyles.modalHeader}>
               <h3 style={modalStyles.modalTitle}>
@@ -276,7 +263,7 @@ export default function Settings({ habits, settings, colorMap, iconMap, onBack, 
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   )
@@ -389,23 +376,29 @@ const styles = {
 }
 
 const modalStyles = {
-  modalCard: {
+  modalOverlay: {
     position: 'fixed',
-    left: '50%',
-    bottom: 0,
-    transform: 'translateX(-50%)',
-    width: '100%',
-    maxWidth: 480,
+    inset: 0,
+    background: 'rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+    zIndex: 200,
+    animation: 'fadeIn 0.2s ease',
+  },
+  modalCard: {
     background: 'var(--surface)',
-    borderRadius: '20px 20px 0 0',
+    borderRadius: 24,
     border: '0.5px solid var(--border)',
-    borderBottom: 'none',
-    zIndex: 110,
-    padding: '24px 20px',
-    boxShadow: '0 -8px 32px rgba(0,0,0,0.12)',
+    padding: '28px 24px',
+    width: '100%',
+    maxWidth: 420,
+    boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
     display: 'flex',
     flexDirection: 'column',
-    maxHeight: '85dvh',
+    maxHeight: '90vh',
   },
   modalHeader: {
     display: 'flex',
